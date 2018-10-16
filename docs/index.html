@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='utf8'>
+<title>XJTU Journal Search</title>
+<style>
+* { font-family: Arial, Helvetica, sans-serif; }
+#app table th { text-align: left; text-indent: .5em; }
+#app table th { text-align: left; text-indent: .5em; }
+#app table tr:nth-child(odd) td { background: #EFEFEF; }
+</style>
+</head>
+
+<body>
+<div id="app">
+    <p style="padding: 0 0 1em 0; border-bottom: 1px solid grey;">
+        <span style="font-weight: bold; font-size: 1.2em;">XJTU Journal Search</span>
+        <input type="text" v-model='keywords' v-on:keyup.enter="search"> | 
+        Search results for <b>{{ keywords }}</b>, {{ num_results }} records.
+    </p>
+    
+    <table width="100%">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>SUBJECT</th>
+            <th>RANK</th>
+            <th>TITLE</th>
+            <th>ISSN</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="journal in jlist">
+            <td>{{ journal.id }}</td>
+            <td>{{ journal.cate }}</td>
+            <td>{{ journal.level }}</td>
+            <td>{{ journal.title }}</td>
+            <td>{{ journal.issn }}</td>
+        </tr>
+    </tbody>
+    </table>
+</div>
+
+<script src="./static/js/jquery.min.js"></script>
+<script src="./static/js/vue.min.js"></script>
+<script src="./static/js/lunr.min.js"></script>
+<script>
+
+var journals = [];
+var cate2lbl = {
+    'RW':'人文社科', 
+    'GL1':'管理学一', 
+    'GL2':'管理学二', 
+    'JJ':'经济金融',
+    'LG':'理学工学',
+    'SY':'生物医学',
+    'ZJ':'建筑学'
+}
+var lv2lbl = {
+    'A': '最有影响',
+    'B': '国际知名'
+}
+// Use English
+cate2lbl = {
+    'RW':'SOCIAL', 
+    'GL1':'MANAGE I', 
+    'GL2':'MANAGE II', 
+    'JJ':'ECONOMY',
+    'LG':'SCI&ENG',
+    'SY':'BIO&MED',
+    'ZJ':'ARCHITECTURE'
+}
+lv2lbl = {
+    'A': 'RANK A',
+    'B': 'RANK B'
+}
+var idx;
+$(document).ready(function(){
+    // init the vue app
+    initApp();
+
+    // load data
+    $.get(
+        './static/data/journals.json',
+        {},
+        function(data){
+            // bind data
+            dt = data;
+            
+            // init the lunr indexer
+            idx = lunr(function(){
+                this.ref('id');
+                this.field('title');
+
+                for (var i=0; i<dt['journals'].length; i++) {
+                    var journal = {
+                        'id': i,
+                        'title': dt['journals'][i][1],
+                        'nation': dt['journals'][i][2],
+                        'issn': dt['journals'][i][3],
+                        'cate': cate2lbl[dt['journals'][i][4]],
+                        'level': lv2lbl[dt['journals'][i][5]]
+                    };
+                    journals.push(journal);
+                    this.add(journal);
+                }
+                console.log('added '+dt['journals'].length+' records');
+            });
+
+        }, 'json'
+    );
+});
+
+function initApp() {
+    var app = new Vue({
+        el: '#app',
+        data: {
+            jlist: [],
+            keywords: '',
+            num_results: 0
+        },
+        methods: {
+            search: function(evt) {
+                console.log(this.keywords);
+                var results = idx.search(this.keywords);
+                // add to a list
+                var jlist = [];
+                for (var i=0; i<results.length; i++) {
+                    jlist.push(journals[results[i].ref])
+                }
+                this.jlist = jlist;
+                this.num_results = jlist.length;
+            }
+        }
+    })
+}
+</script>
+</body>
+</html>
