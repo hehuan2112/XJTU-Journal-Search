@@ -25,4 +25,4 @@ then you can access this little web site on `localhost:8000`
 4. render page by `vue.js` (https://vuejs.org/)
 5. use
 
-![image of search ui](https://github.com/focusheart/xjtu-journal-search/blob/master/static/img/cover.png?raw=true)
+![image of search ui](https://github.com/hehuan2112/XJTU-Journal-Search/blob/master/static/img/cover.png?raw=true)
